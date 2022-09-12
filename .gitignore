@@ -1,2 +1,5 @@
 *.swp
-.git
+csci531-fall2022
+**/.DS_Store
+**/dSUM*
+zo_BACKUP/**
