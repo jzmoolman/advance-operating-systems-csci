@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <pthread.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -222,19 +222,21 @@ void printQueue(int chunkid) {
 
 int main(int argc, char *argv[]) {
     int count = 0;
-    printf("running ...find_number_of_primes(4, 100)\n");
-    count = find_number_of_primes(4, 100);
+    printf("running ...find_number_of_primes(4, 300)\n");
+    count = find_number_of_primes(4, 300);
     printf("Numbers of primes: %d\n" , count);
     printQueue(1);
+    printf("\n");
 
     
-    printf("running ...find_number_of_primes_mp(4, 100)\n");
-    count = find_number_of_primes_mp(4, 6, 100);
+    printf("running ...find_number_of_primes_mp(4, 300)\n");
+    count = find_number_of_primes_mp(4, 6, 300);
     printf("Numbers of primes: %d\n" , count);
     printQueue(1);
+    printf("\n");
 
-
-    count = find_number_of_primes_chuck(1, 100, 4);
+    printf("running ...find_number_of_primes_mp(4, 300)\n");
+    count = find_number_of_primes_chuck(1, 300, 4);
     printf("Numbers of primes: %d\n" , count);
     printQueue(1);
     printQueue(2);
