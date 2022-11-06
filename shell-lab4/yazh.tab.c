@@ -66,15 +66,25 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     COMMAND = 258,
-     STRING = 259,
-     VAR = 260
+     PWD = 258,
+     CD = 259,
+     ECHO = 260,
+     WORD = 261,
+     VAR = 262,
+     STRING = 263,
+     SET = 264,
+     EOL = 265
    };
 #endif
 /* Tokens.  */
-#define COMMAND 258
-#define STRING 259
-#define VAR 260
+#define PWD 258
+#define CD 259
+#define ECHO 260
+#define WORD 261
+#define VAR 262
+#define STRING 263
+#define SET 264
+#define EOL 265
 
 
 
@@ -83,8 +93,8 @@
 #line 1 "yazh.y"
 
     #include <stdio.h>
-    #include <stdlib.h>
     #include "symtab.h"
+    #include "posixfunc.h"
     extern int yylex(void);
 
 
@@ -110,12 +120,12 @@
 typedef union YYSTYPE
 #line 8 "yazh.y"
 {
-  struct stringrec *c;
-  struct stringrec *s;
-  struct stringrec *v;
+  struct symbol *s;
+  struct param *pl;
+  struct ast *a;
 }
 /* Line 193 of yacc.c.  */
-#line 119 "yazh.tab.c"
+#line 129 "yazh.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -128,7 +138,7 @@ typedef union YYSTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 132 "yazh.tab.c"
+#line 142 "yazh.tab.c"
 
 #ifdef short
 # undef short
@@ -341,22 +351,22 @@ union yyalloc
 #endif
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  2
+#define YYFINAL  17
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   5
+#define YYLAST   30
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  6
+#define YYNTOKENS  12
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  2
+#define YYNNTS  6
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  5
+#define YYNRULES  18
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  6
+#define YYNSTATES  29
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   260
+#define YYMAXUTOK   265
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -367,7 +377,7 @@ static const yytype_uint8 yytranslate[] =
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     5,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -390,7 +400,7 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5
+       6,     7,     8,     9,    10,    11
 };
 
 #if YYDEBUG
@@ -398,20 +408,26 @@ static const yytype_uint8 yytranslate[] =
    YYRHS.  */
 static const yytype_uint8 yyprhs[] =
 {
-       0,     0,     3,     4,     7,    10
+       0,     0,     3,     4,     6,     9,    11,    14,    18,    21,
+      25,    29,    34,    37,    41,    43,    45,    48,    50
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-       7,     0,    -1,    -1,     7,     3,    -1,     7,     4,    -1,
-       7,     5,    -1
+      13,     0,    -1,    -1,    14,    -1,    13,    14,    -1,    11,
+      -1,     3,    11,    -1,     4,     7,    11,    -1,    10,    11,
+      -1,     6,    16,    11,    -1,    15,    16,    11,    -1,    15,
+      16,     5,    11,    -1,    15,    11,    -1,    15,     5,    11,
+      -1,     7,    -1,    17,    -1,    17,    16,    -1,     7,    -1,
+       8,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    23,    23,    24,    25,    26
+       0,    22,    22,    23,    24,    27,    28,    29,    30,    31,
+      46,    73,   100,   115,   130,   134,   135,   137,   141
 };
 #endif
 
@@ -420,8 +436,9 @@ static const yytype_uint8 yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "COMMAND", "STRING", "VAR", "$accept",
-  "line", 0
+  "$end", "error", "$undefined", "PWD", "CD", "'&'", "ECHO", "WORD",
+  "VAR", "STRING", "SET", "EOL", "$accept", "input", "line", "command",
+  "param", "word", 0
 };
 #endif
 
@@ -430,20 +447,23 @@ static const char *const yytname[] =
    token YYLEX-NUM.  */
 static const yytype_uint16 yytoknum[] =
 {
-       0,   256,   257,   258,   259,   260
+       0,   256,   257,   258,   259,    38,   260,   261,   262,   263,
+     264,   265
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,     6,     7,     7,     7,     7
+       0,    12,    13,    13,    13,    14,    14,    14,    14,    14,
+      14,    14,    14,    14,    15,    16,    16,    17,    17
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     0,     2,     2,     2
+       0,     2,     0,     1,     2,     1,     2,     3,     2,     3,
+       3,     4,     2,     3,     1,     1,     2,     1,     1
 };
 
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
@@ -451,27 +471,31 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       2,     0,     1,     3,     4,     5
+       2,     0,     0,     0,    14,     0,     5,     0,     3,     0,
+       6,     0,    17,    18,     0,    15,     8,     1,     4,     0,
+      12,     0,     7,     9,    16,    13,     0,    10,    11
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     1
+      -1,     7,     8,     9,    14,    15
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -1
+#define YYPACT_NINF -11
 static const yytype_int8 yypact[] =
 {
-      -1,     0,    -1,    -1,    -1,    -1
+       9,   -10,    -2,    10,   -11,     3,   -11,     0,   -11,    16,
+     -11,    14,   -11,   -11,    15,    10,   -11,   -11,   -11,    18,
+     -11,    -3,   -11,   -11,   -11,   -11,    19,   -11,   -11
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -1,    -1
+     -11,   -11,     2,   -11,    13,   -11
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -481,19 +505,27 @@ static const yytype_int8 yypgoto[] =
 #define YYTABLE_NINF -1
 static const yytype_uint8 yytable[] =
 {
-       2,     0,     0,     3,     4,     5
+      17,    10,    26,     1,     2,    11,     3,     4,    27,    18,
+       5,     6,     1,     2,    16,     3,     4,    12,    13,     5,
+       6,    19,    21,    12,    13,    22,    23,    20,    24,    25,
+      28
 };
 
-static const yytype_int8 yycheck[] =
+static const yytype_uint8 yycheck[] =
 {
-       0,    -1,    -1,     3,     4,     5
+       0,    11,     5,     3,     4,     7,     6,     7,    11,     7,
+      10,    11,     3,     4,    11,     6,     7,     7,     8,    10,
+      11,     5,     9,     7,     8,    11,    11,    11,    15,    11,
+      11
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     7,     0,     3,     4,     5
+       0,     3,     4,     6,     7,    10,    11,    13,    14,    15,
+      11,     7,     7,     8,    16,    17,    11,     0,    14,     5,
+      11,    16,    11,    11,    16,    11,     5,    11,    11
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1307,29 +1339,181 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-        case 2:
-#line 23 "yazh.y"
-    { printf("empty\n"); ;}
+        case 6:
+#line 28 "yazh.y"
+    { root_ast = new_ast(PWD,NULL,NULL,0);                      ;}
     break;
 
-  case 3:
-#line 24 "yazh.y"
-    { printf("command %s\n", (yyvsp[(2) - (2)].c)->str); ;}
+  case 7:
+#line 29 "yazh.y"
+    { root_ast = new_ast(CD,(struct ast *)(yyvsp[(2) - (3)].s),NULL,0);            ;}
     break;
 
-  case 4:
-#line 25 "yazh.y"
-    { printf("string %s\n", (yyvsp[(2) - (2)].s)->str); ;}
+  case 8:
+#line 30 "yazh.y"
+    { root_ast = new_ast(SET,(struct ast *)(yyvsp[(1) - (2)].s),NULL,0);  ;}
     break;
 
-  case 5:
-#line 26 "yazh.y"
-    { printf("VAR %s\n", (yyvsp[(2) - (2)].v)->str); ;}
+  case 9:
+#line 31 "yazh.y"
+    {  
+                            int count = 0; 
+                            for ( struct param *t = (yyvsp[(2) - (3)].pl); t!= NULL; t = t->next)
+                                count++;
+
+                            char** param = malloc(sizeof(char*)*count+1);
+                            char** p = param;
+                            for ( struct param *t = (yyvsp[(2) - (3)].pl); t!= NULL; t = t->next) {
+                                *p = t->sym->name;
+                                p++;
+                            }
+                            *p = NULL; // should this go here or in eval??
+
+                            root_ast = new_ast(ECHO, (struct ast*)param, NULL,0);
+                        ;}
+    break;
+
+  case 10:
+#line 46 "yazh.y"
+    {                                   // printf("command: param %s\n", $1->name);
+                            char *fp = find_cmd((yyvsp[(1) - (3)].s)->name);
+                                                            // printf("D0\n");
+                                                            // printf("%s\n", fp);
+                            if (fp) {
+
+                                int count = 0; 
+                                for ( struct param *t = (yyvsp[(2) - (3)].pl); t!= NULL; t = t->next)
+                                    count++;
+                                
+                                char** param = malloc(sizeof(char*)*count+2); // 1 for filename 1 for \0
+                                char** p = param;
+                                *p = (yyvsp[(1) - (3)].s)->name; 
+                                p++;
+                                for ( struct param *t = (yyvsp[(2) - (3)].pl); t!= NULL; t = t->next) {
+                                    *p = t->sym->name;
+                                    p++;
+                                }
+                                *p = NULL;
+
+                                exe_cmd(fp, count+1, param,0);
+
+                             } else {
+                                printf("file not found\n");
+                             }
+                             printf("> ");           
+                        ;}
+    break;
+
+  case 11:
+#line 73 "yazh.y"
+    {                                   // printf("command: param %s\n", $1->name);
+                            char *fp = find_cmd((yyvsp[(1) - (4)].s)->name);
+                                                            // printf("D0\n");
+                                                            // printf("%s\n", fp);
+                            if (fp) {
+
+                                int count = 0; 
+                                for ( struct param *t = (yyvsp[(2) - (4)].pl); t!= NULL; t = t->next)
+                                    count++;
+                                
+                                char** param = malloc(sizeof(char*)*count+2); // 1 for filename 1 for \0
+                                char** p = param;
+                                *p = (yyvsp[(1) - (4)].s)->name; 
+                                p++;
+                                for ( struct param *t = (yyvsp[(2) - (4)].pl); t!= NULL; t = t->next) {
+                                    *p = t->sym->name;
+                                    p++;
+                                }
+                                *p = NULL;
+
+                                exe_cmd(fp, count+1, param, 1);
+
+                             } else {
+                                printf("file not found\n");
+                             }
+                             printf("> ");           
+                        ;}
+    break;
+
+  case 12:
+#line 100 "yazh.y"
+    {                                         // printf("command: EOL%s\n", $1->name);
+                            char *fp = find_cmd((yyvsp[(1) - (2)].s)->name);
+                            if (fp) {
+
+                                int count = 0; 
+                                char** param = malloc(sizeof(char*)*count+2); // 1 for filename 1 for \0
+                                *param = (yyvsp[(1) - (2)].s)->name;
+                                *(param+1) = NULL;
+                                exe_cmd(fp, count+1, param, 0);
+
+                             } else {
+                                printf("file not found\n");
+                             }
+                             printf("> ");           
+                        ;}
+    break;
+
+  case 13:
+#line 115 "yazh.y"
+    {                                          // printf("command: EOL &%s\n", $1->name);
+                            char *fp = find_cmd((yyvsp[(1) - (3)].s)->name);
+                            if (fp) {
+
+                                int count = 0; 
+                                char** param = malloc(sizeof(char*)*count+2); // 1 for filename 1 for \0
+                                *param = (yyvsp[(1) - (3)].s)->name;
+                                *(param+1) = NULL;
+                                exe_cmd(fp, count+1, param, 1);
+
+                             } else {
+                                printf("file not found\n");
+                             }
+                             printf("> ");           
+                        ;}
+    break;
+
+  case 14:
+#line 130 "yazh.y"
+    {   
+                            (yyval.s) = (yyvsp[(1) - (1)].s); 
+                        ;}
+    break;
+
+  case 15:
+#line 134 "yazh.y"
+    {    (yyval.pl) = (yyvsp[(1) - (1)].pl); ;}
+    break;
+
+  case 16:
+#line 135 "yazh.y"
+    {   (yyvsp[(1) - (2)].pl)->next = (yyvsp[(2) - (2)].pl); (yyval.pl) = (yyvsp[(1) - (2)].pl); ;}
+    break;
+
+  case 17:
+#line 137 "yazh.y"
+    {   
+                            struct param *a = new_param((yyvsp[(1) - (1)].s));
+                            (yyval.pl) = a;
+                        ;}
+    break;
+
+  case 18:
+#line 141 "yazh.y"
+    {   char* var = get_env_var((yyvsp[(1) - (1)].s)->name);
+                            struct param *b;
+                            if ( var != NULL ) {
+                                b = new_param(lookup(var));
+                            } else {
+                                b = new_param(lookup("{EMPTY}"));
+                            }
+                            (yyval.pl) = b;
+                        ;}
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1333 "yazh.tab.c"
+#line 1517 "yazh.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1543,6 +1727,6 @@ yyreturn:
 }
 
 
-#line 29 "yazh.y"
+#line 152 "yazh.y"
 
 

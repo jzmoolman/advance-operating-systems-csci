@@ -39,15 +39,25 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     COMMAND = 258,
-     STRING = 259,
-     VAR = 260
+     PWD = 258,
+     CD = 259,
+     ECHO = 260,
+     WORD = 261,
+     VAR = 262,
+     STRING = 263,
+     SET = 264,
+     EOL = 265
    };
 #endif
 /* Tokens.  */
-#define COMMAND 258
-#define STRING 259
-#define VAR 260
+#define PWD 258
+#define CD 259
+#define ECHO 260
+#define WORD 261
+#define VAR 262
+#define STRING 263
+#define SET 264
+#define EOL 265
 
 
 
@@ -56,12 +66,12 @@
 typedef union YYSTYPE
 #line 8 "yazh.y"
 {
-  struct stringrec *c;
-  struct stringrec *s;
-  struct stringrec *v;
+  struct symbol *s;
+  struct param *pl;
+  struct ast *a;
 }
 /* Line 1529 of yacc.c.  */
-#line 65 "yazh.tab.h"
+#line 75 "yazh.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

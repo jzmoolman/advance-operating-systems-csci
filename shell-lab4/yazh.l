@@ -15,38 +15,50 @@ int line_number = 0;
 
 white_space       [ \t]*
 digit             [0-9]
-alpha             [A-Za-z_]
+alpha             [-A-Za-z_/]
 alpha_num         ({alpha}|{digit})
 hex_digit         [0-9A-F]
-command           {alpha}{alpha_num}*
+word              {alpha_num}*
 unsigned_integer  {digit}+
 hex_integer       ${hex_digit}{hex_digit}*
 exponent          e[+-]?{digit}+
 i                 {unsigned_integer}
 real              ({i}\.{i}?|{i}?\.{i}){exponent}?
-var               \${command}
+var               \${word}
 string            \'([^'\n]|\'\')+\'
 bad_string        \'([^'\n]|\'\')+
 %%
+pwd                 {  return PWD; }
+
+cd                  {  return CD; }
+echo                {  return ECHO; }
 
 {var}               {  
-                        struct stringrec *a = newstringrec(yytext,'V');
-                        yylval.v = a;
+                        struct symbol *a = lookup(yytext);
+                        yylval.s = a;
                         return VAR;
                     }
 {string}            {  
-                        struct stringrec *a = newstringrec(yytext, 'S');
+                        struct symbol *a = lookup(yytext);
                         yylval.s = a;
                         return STRING;
                     }
-{command}           {  
-                        struct stringrec *a = newstringrec(yytext, 'C');
-                        yylval.c = a;
-                        return COMMAND;
+{word}              {   struct symbol *a = lookup(yytext);
+                        yylval.s = a;
+                        return WORD;
                     }
 {bad_string}         yyerror("Unterminated string");
 {white_space}        /* do nothing */
-\n                   line_number += 1;
+&                   return '&';
+\n                  {
+                        line_number += 1;
+                        return EOL;
+                    }
+{word}={word}       { 
+                        struct symbol *a = lookup(yytext);
+                        yylval.s = a;
+                        return SET;
+                    }
 .                    yyerror("Illegal input");
 
 %%

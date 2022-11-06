@@ -1,36 +1,59 @@
-
-
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-
 #include "symtab.h"
+#include  "yazh.tab.h"
+#include "posixfunc.h"
 
-struct stringrec *newstringrec(char* str, int nodetype ) {
-    struct stringrec *a =  malloc(sizeof(struct stringrec));
-	if (!a) {
-        yyerror("Out of space\n");
-        exit(0);
-    }
+// typedef struct yy_buffer_state *YY_BUFFER_STATE
+extern struct yy_buffer_state *yy_scan_string(char*);
+extern struct yy_buffer_state *yy_scan_buffer(char*, size_t);
+extern void yy_delete_buffer(struct yy_buffer_state *buffer);
+extern void yy_switch_to_buffer(struct yy_buffer_state *buffer);
 
-    a->nodetype = nodetype;
-    a->str = strdup(str); 
-    return a;
+void print_prompt(char* s){
+    printf("%s", s);
+    fflush(stdout);
 }
 
+char* read_line() {
+    char* line = NULL;
+    size_t len = 0;
+    getline(&line, &len, stdin);
+    return line;
+}
 
-void yyerror(char *s, ...) {
-  va_list ap;
-  va_start(ap, s);
+int eval_ast(struct ast *a) {
+    if (a == NULL) {
+        return 0;
+    }
+    switch (a->type)
+    {
+    case PWD: cmd_pwd(); break;
+    case CD: cmd_cd(((struct symbol *)a->l)->name); break;
+    case ECHO: cmd_echo((char**)(a->l)); break;
+    case SET: cmd_set(((struct symbol *)a->l)->name); break;
+    default:
+        break;
+    }
+    return 0;
+}
 
-  fprintf(stderr, "%d: error: ", yylineno);
-  vfprintf(stderr, s, ap);
-  fprintf(stderr, "\n");
+int parse_line(char* line) {
+    struct ast *_ast;
+    struct yy_buffer_state *buffer = yy_scan_string(line);
+    yy_switch_to_buffer(buffer);
+    yyparse(); // check any errors?
+    eval_ast(root_ast);
+    root_ast = NULL;
+    yy_delete_buffer(buffer);
+    return 0; //  retruns 0 when success otherwise report back process result
 }
 
 int main() {
-    printf("> ");
-    return yyparse();
+    // return yyparse();
+    while (1) {
+        print_prompt("> ");
+        parse_line(read_line());
+    }
+    return 0;
 }
 
