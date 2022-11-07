@@ -31,7 +31,7 @@ bad_string        \'([^'\n]|\'\')+
 pwd                 {  return PWD; }
 
 cd                  {  return CD; }
-echo                {  return ECHO; }
+echo                {  return ECHO2; }
 
 {var}               {  
                         struct symbol *a = lookup(yytext);

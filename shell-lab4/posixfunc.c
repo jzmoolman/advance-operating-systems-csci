@@ -1,10 +1,15 @@
 
 #include <stdio.h>
-#include <stdlib.h> /* getenv */
+#include <stdlib.h> /* malloc getenv */
 #include <string.h> /* strdup */
 #include <sys/stat.h> /* stat */
 #include <unistd.h> /* fork */
+#include <pthread.h>
+#include <signal.h>
 
+
+                    
+                    
 #include "posixfunc.h"
 
 extern char **environ;
@@ -112,25 +117,106 @@ void cmd_set(char* s) {
 
 
 
-
+int fg = 0;
 static void sigintHandler(int sig)
 {
-    printf("pid: %d", getpid());
-    printf("Caught singal %d\n", sig);
+    // printf("pid: %d", getpid());
+    // printf("Caught singal %d\n", sig);
+    if ( fg == 1) {
+        // ddo nothing
+    } else {
+        abort();
+    }
 }
 
-int exe_cmd(char *cmd, int argc, char** argv, int bg){
+
+struct process {
+    int pid;
+    char* rel_cmd;
+    int jobid;
+    int status;
+    struct process* next;
+};
+
+pthread_mutex_t process_mutex = PTHREAD_MUTEX_INITIALIZER; 
+struct process *process_list = NULL;
+
+struct process *new_process(struct process* next, int pid, char* rel_cmd, int jobid) { 
+    struct process *p = malloc(sizeof(struct process));
+    if (!p) {
+        // error("out of space");
+        // exit(0);
+    }
+    memset(p, 0, sizeof(struct process));
+
+    p->pid = pid;
+    p->rel_cmd = rel_cmd;
+    p->jobid = jobid;
+    p->status = 0;
+    p->next = next;
+    return p;
+}
+
+
+void *killer_thread(void *args) {
+    int pid = (int)args;
+    sleep(10);
+    kill(pid, SIGINT);
+    pthread_exit(NULL);
+}
+
+void *handle_process_signals(void *args) {
+    while (1) {
+        struct process *list = process_list;
+        while (list != NULL && list->status == 0) { // cycle through process list
+            pid_t w;
+            int status = 0;
+            // do {
+                w = waitpid(list->pid, &status, WUNTRACED | WCONTINUED );
+                if (WIFEXITED(status)) {
+                        printf("[%d] + done %s\n", list->jobid, list->rel_cmd);
+                        printf("exited, status=%d\n", WEXITSTATUS(status));
+                        pthread_mutex_lock(&process_mutex); 
+                        list->status = 1;
+                        pthread_mutex_unlock(&process_mutex); 
+                        printf("> "); // HACK SHOULD be callback to main.c
+                        fflush(stdout);
+                    } else if (WIFSIGNALED(status)) {
+                        printf("killed by signal %d\n", WTERMSIG(status));
+                    } else if (WIFSTOPPED(status)) {
+                        printf("stopped by signal %d\n", WSTOPSIG(status));
+                    } else if (WIFCONTINUED(status)) {
+                        printf("continued\n");
+                    }
+            // } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+        }
+        sleep(1);
+    }
+    pthread_exit(NULL);
+}
+    
+int exe_cmd(char *cmd, char** argv, int bg) {
     /* wait for child */
-    // printf("exe_cmd %s %s %s", cmd, *argv, *(argv+1));
+    // printf("exe_cmd: %s %s %s\n", cmd, *argv, *(argv+1));
 
     pid_t pid;
     pid = fork();
+    pthread_t threadid;
+
     if ( bg == 0 ) {
         if ( pid == 0) {
             execv(cmd, argv);
         } else {
+            if (signal(SIGINT, sigintHandler) == SIG_ERR) {
+                perror("signal SIGINT ???");
+                exit(EXIT_FAILURE);
+            } 
             int status = 0;
+            fg = 1;
+            pthread_create(&threadid, NULL, killer_thread, (void *)pid);
+            pthread_detach(threadid); 
             waitpid(pid, &status,WUNTRACED );
+            fg = 0;
         };
     } else {
         if ( pid == 0) {
@@ -141,28 +227,25 @@ int exe_cmd(char *cmd, int argc, char** argv, int bg){
             execv(cmd, argv);
             printf("Child(%d) end\n", getpid());
         } else {
-            printf("[1] %d\n", pid);
+            struct process *p;
+            if (process_list == NULL)  {
+                /* start thread to listing to events */
+                pthread_create(&threadid, NULL, handle_process_signals, NULL);
+                pthread_detach(threadid);
+                pthread_mutex_lock(&process_mutex); 
+                process_list = new_process(NULL, pid, strdup(*argv), 1);
+                pthread_mutex_unlock(&process_mutex);
+            } else {
+                process_list = new_process(process_list, pid, strdup(*argv), process_list->jobid++);
+            }
+            
+            printf("[%d] %d\n", process_list->jobid, pid);
+
             if (signal(SIGINT, sigintHandler) == SIG_ERR) {
                 perror("signal SIGINT");
                 exit(EXIT_FAILURE);
-            } 
-            pid_t w;
-            int status = 0;
-            do {
-                w = waitpid(pid, &status,WUNTRACED | WCONTINUED );
-                if (WIFEXITED(status)) {
-                        printf("exited, status=%d\n", WEXITSTATUS(status));
-                    } else if (WIFSIGNALED(status)) {
-                        printf("killed by signal %d\n", WTERMSIG(status));
-                    } else if (WIFSTOPPED(status)) {
-                        printf("stopped by signal %d\n", WSTOPSIG(status));
-                    } else if (WIFCONTINUED(status)) {
-                        printf("continued\n");
-                    }
-            } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-            printf("[1] + done %s\n", *argv);
-            // exit(EXIT_SUCCESS);
-        }
+            }
+        } 
     }
     return 0;
 }

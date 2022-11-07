@@ -800,7 +800,7 @@ YY_RULE_SETUP
 case 3:
 YY_RULE_SETUP
 #line 34 "yazh.l"
-{  return ECHO; }
+{  return ECHO2; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
