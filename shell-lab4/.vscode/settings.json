@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "stat.h": "c",
+        "typeinfo": "c",
+        "stdlib.h": "c",
+        "posixfunc.h": "c"
+    }
+}
