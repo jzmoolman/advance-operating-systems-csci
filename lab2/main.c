@@ -223,24 +223,25 @@ void printQueue(int chunkid) {
 int main(int argc, char *argv[]) {
     int count = 0;
     printf("running ...find_number_of_primes(4, 300)\n");
-    count = find_number_of_primes(4, 300);
+    count = find_number_of_primes(4, 200);
     printf("Numbers of primes: %d\n" , count);
     printQueue(1);
     printf("\n");
 
     
     printf("running ...find_number_of_primes_mp(4, 300)\n");
-    count = find_number_of_primes_mp(4, 6, 300);
+    count = find_number_of_primes_mp(4, 6, 200);
     printf("Numbers of primes: %d\n" , count);
     printQueue(1);
     printf("\n");
 
     printf("running ...find_number_of_primes_mp(4, 300)\n");
-    count = find_number_of_primes_chuck(1, 300, 4);
+    count = find_number_of_primes_chuck(1, 200, 4);
     printf("Numbers of primes: %d\n" , count);
     printQueue(1);
     printQueue(2);
     printQueue(3);
     printQueue(4);
+
 
 }
